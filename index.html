@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Book</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Replace html2pdf with jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="book-container" id="bookContainer">
+        <!-- Top navigation bar -->
+        <div class="top-bar">
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h2 class="chapter-title" id="currentChapterTitle">chapter1.md</h2>
+            <div class="navigation-controls">
+                <button class="download-btn" id="downloadPdfBtn" title="Download als PDF">
+                    <i class="fas fa-file-pdf"></i>
+                </button>
+                <div class="page-buttons">
+                    <button class="page-button" id="prevButton">&lt;</button>
+                    <button class="page-button" id="nextButton">&gt;</button>
+                </div>
+                <div class="audio-controls">
+                    <button class="play-button" id="toggleBtn">
+                        <i class="fas fa-play" id="playIcon"></i>
+                    </button>
+                    <input type="range" class="volume-control" id="volumeRange" min="0" max="1" step="0.01" value="0.7">
+                    <i class="fas fa-volume-up" id="volumeIcon"></i>
+                </div>
+            </div>
+            <!-- Progress bar at the bottom of the top bar -->
+            <div class="progress-container">
+                <div class="progress-bar" id="readingProgress"></div>
+            </div>
+        </div>
+
+        <!-- PDF generation container (hidden) -->
+        <div id="pdfContainer" style="display: none;"></div>
+
+        <!-- Sidebar for chapter navigation -->
+        <div class="chapters-sidebar">
+            <ul class="chapter-list" id="chapterList">
+                <!-- Chapters will be loaded here -->
+            </ul>
+        </div>
+
+        <!-- Home page overlay -->
+        <div class="home-page" id="homePage">
+            <div class="book-cover-container">
+                <img src="images/Schrei der Helden Cover.png" alt="Schrei der Helden" class="book-cover">
+                <button class="start-reading-btn" id="startReadingBtn">Anfangen zu lesen</button>
+            </div>
+        </div>
+
+        <!-- Main content area -->
+        <div class="main-content">
+            <div class="content-area" id="contentArea">
+                <!-- Chapter content will be displayed here -->
+                <div id="chapterContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden audio element -->
+    <audio id="bgMusic" src="music/track1.mp3" loop></audio>
+
+    <script>
+        // DOM Elements
+        const bookContainer = document.getElementById('bookContainer');
+        const menuToggle = document.getElementById('menuToggle');
+        const currentChapterTitle = document.getElementById('currentChapterTitle');
+        const chapterList = document.getElementById('chapterList');
+        const chapterContent = document.getElementById('chapterContent');
+        const contentArea = document.getElementById('contentArea');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const bgMusic = document.getElementById('bgMusic');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const playIcon = document.getElementById('playIcon');
+        const volumeRange = document.getElementById('volumeRange');
+        const volumeIcon = document.getElementById('volumeIcon');
+        const readingProgress = document.getElementById('readingProgress');
+        const homePage = document.getElementById('homePage');
+        const startReadingBtn = document.getElementById('startReadingBtn');
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+        const pdfContainer = document.getElementById('pdfContainer');
+
+        // Chapter data - in a real app, this would be loaded dynamically
+        const chapters = [
+            { id: 'prolog', filename: 'Prolog.md', title: 'Prolog', coverImage: 'images/Prolog_tequila scene_1.png' },
+            { id: 'kapitel1', filename: 'Kapitel_1_Die_Treppe.md', title: 'Kapitel 1: Die Treppe', coverImage: 'images/Prolog_wedding scene_1.png' },
+            { id: 'kapitel2teil1', filename: 'Kapitel_2_Das_Erwachen_Teil_1.md', title: 'Kapitel 2: Das Erwachen Teil 1 (Andrew)', coverImage: 'images/andrew_profil_image1.png' },
+            { id: 'kapitel2teil2', filename: 'Kapitel_2_Das_Erwachen_Teil_2.md', title: 'Kapitel 2: Das Erwachen Teil 2 (Jake)', coverImage: 'images/jake_profil_image1.png' },
+            { id: 'kapitel2teil3', filename: 'Kapitel_2_Das_Erwachen_Teil_3.md', title: 'Kapitel 2: Das Erwachen Teil 3 (Brian)', coverImage: 'images/brian_profil_image1.png' },
+            { id: 'kapitel3teil1', filename: 'Kapitel_3_Die_Neue_Welt_Teil_1.md', title: 'Kapitel 3: Die Neue Welt Teil 1 (Andrew)', coverImage: '' },
+            { id: 'kapitel3teil2', filename: 'Kapitel_3_Die_Neue_Welt_Teil_2.md', title: 'Kapitel 3: Die Neue Welt Teil 2 (Jake)', coverImage: '' },
+            { id: 'kapitel3teil3', filename: 'Kapitel_3_Die_Neue_Welt_Teil_3.md', title: 'Kapitel 3: Die Neue Welt Teil 3 (Brian)', coverImage: '' },
+            { id: 'kapitel4teil1', filename: 'Kapitel_4_Die_Zeichen_Teil_1.md', title: 'Kapitel 4: Die Zeichen Teil 1 (Andrew)', coverImage: '' },
+            { id: 'kapitel4teil2', filename: 'Kapitel_4_Die_Zeichen_Teil_2.md', title: 'Kapitel 4: Die Zeichen Teil 2 (Jake)', coverImage: '' },
+            { id: 'kapitel4teil3', filename: 'Kapitel_4_Die_Zeichen_Teil_3.md', title: 'Kapitel 4: Die Zeichen Teil 3 (Brian)', coverImage: '' }
+        ];
+        
+        // Music tracks mapped to chapters
+        const chapterMusic = {
+            'prolog': ['music/Prolog_Tropical Vibes.mp3', 'music/Prolog_Tribal Echo.mp3'],
+            'kapitel1': ['music/Kapitel 1_Desert Echoes.mp3', 'music/Kapitel 1_Elysium.mp3'],
+            'kapitel2teil1': ['music/Kapitel 2_awakening andrew.mp3', 'music/Kapitel 2_awakening andrew 2.mp3'],
+            'kapitel2teil2': [],
+            'kapitel2teil3': [],
+            'kapitel3teil1': [],
+            'kapitel3teil2': [],
+            'kapitel3teil3': [],
+            'kapitel4teil1': [],
+            'kapitel4teil2': [],
+            'kapitel4teil3': []
+        };
+        
+        let currentChapterIndex = 0;
+        let currentMusicIndex = 0;
+
+        // Initialize the app
+        function init() {
+            populateChapterList();
+            setupEventListeners();
+            
+            // Show home page instead of loading first chapter directly
+            showHomePage();
+            
+            // Position the progress bar initially
+            readingProgress.style.width = '0%';
+        }
+
+        // Toggle sidebar visibility
+        function toggleSidebar(forceOpen) {
+            if (forceOpen === true) {
+                bookContainer.classList.add('sidebar-open');
+            } else if (forceOpen === false) {
+                bookContainer.classList.remove('sidebar-open');
+            } else {
+                bookContainer.classList.toggle('sidebar-open');
+            }
+        }
+
+        // Populate the chapter list in the sidebar
+        function populateChapterList() {
+            chapters.forEach((chapter, index) => {
+                const li = document.createElement('li');
+                li.className = 'chapter-item';
+                li.textContent = chapter.title;
+                li.dataset.index = index;
+                if (index === currentChapterIndex) {
+                    li.classList.add('active');
+                }
+                li.addEventListener('click', () => {
+                    loadChapter(index);
+                });
+                chapterList.appendChild(li);
+            });
+        }
+
+        // Update reading progress
+        function updateReadingProgress() {
+            const scrollPosition = contentArea.scrollTop;
+            const scrollHeight = contentArea.scrollHeight - contentArea.clientHeight;
+            const scrollPercentage = (scrollPosition / scrollHeight) * 100;
+            
+            // Update progress bar
+            readingProgress.style.width = `${scrollPercentage}%`;
+        }
+
+        // Load a chapter by index
+        async function loadChapter(index) {
+            if (index < 0 || index >= chapters.length) return;
+
+            currentChapterIndex = index;
+            
+            // Update chapter title in the top bar to show the full title
+            currentChapterTitle.textContent = chapters[index].title;
+            
+            // Update active chapter in sidebar
+            document.querySelectorAll('.chapter-item').forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Reset scroll position and progress bar
+            contentArea.scrollTop = 0;
+            readingProgress.style.width = '0%';
+
+            // Load appropriate music for the chapter
+            loadChapterMusic(chapters[index].id);
+
+            // Show loading indicator
+            chapterContent.innerHTML = '<div class="loading"></div>';
+
+            try {
+                // Fetch the markdown file
+                const chapterPath = `chapters/${chapters[index].filename}`;
+                console.log(`Attempting to load: ${chapterPath}`);
+                
+                // More robust fetch with explicit error handling
+                const response = await fetch(chapterPath);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load chapter (${response.status}): ${response.statusText}`);
+                }
+                
+                const markdown = await response.text();
+                
+                // If this chapter has a cover image, add it to the markdown
+                let chapterMarkdown = markdown;
+                if (chapters[index].coverImage) {
+                    chapterMarkdown = `![${chapters[index].title}](${chapters[index].coverImage})\n\n${markdown}`;
+                }
+                
+                // Simple markdown to HTML conversion
+                renderMarkdown(chapterMarkdown);
+            } catch (error) {
+                console.error('Error loading chapter:', error);
+                chapterContent.innerHTML = `<div class="error-message">
+                    <p>Error loading chapter: ${error.message}</p>
+                    <p>This may be because:</p>
+                    <ul>
+                        <li>You need to run this through a local web server (try using Live Server in VS Code)</li>
+                        <li>The file "${chapters[index].filename}" doesn't exist in the chapters directory</li>
+                        <li>Your browser's security settings are blocking local file access</li>
+                    </ul>
+                    <p>Try refreshing the page or selecting a different chapter.</p>
+                </div>`;
+            }
+        }
+
+        // Load music tracks for the current chapter
+        function loadChapterMusic(chapterId) {
+            const musicTracks = chapterMusic[chapterId];
+            
+            // Reset music to first track in the chapter or default track if none available
+            currentMusicIndex = 0;
+            
+            if (musicTracks && musicTracks.length > 0) {
+                bgMusic.src = musicTracks[currentMusicIndex];
+                
+                // If music was playing, continue playing the new track
+                if (!playIcon.classList.contains('fa-play')) {
+                    bgMusic.play();
+                }
+            } else {
+                // Set to a default track if no music found for this chapter
+                bgMusic.src = 'music/Prolog_Tropical Vibes.mp3';
+            }
+        }
+
+        // A very basic markdown to HTML converter (for demo purposes)
+        function renderMarkdown(markdown) {
+            // Replace horizontal rules
+            let html = markdown.replace(/^---$/gm, '<hr class="chapter-divider">');
+            
+            // Replace headings (# Heading)
+            html = html.replace(/^# (.*$)/gm, '<h1 class="chapter-title">$1</h1>');
+            
+            // Format scene headings (## Scene x.y [SCENE-ID: x-y])
+            html = html.replace(/^## (Scene \d+\.\d+) \[SCENE-ID: ([^\]]+)\]/gm, 
+                '<div class="scene-heading"><h2>$1</h2></div>');
+            
+            // Also add a scene ID span separately using the scene-id class
+            html = html.replace(/<div class="scene-heading"><h2>Scene (\d+\.\d+)<\/h2><\/div>/g, 
+                '<div class="scene-heading"><h2>Scene $1</h2></div><span class="scene-id">Scene $1</span>');
+            
+            // Replace other h2 headings if any remain
+            html = html.replace(/^## (.*$)/gm, '<h2 class="section-title">$1</h2>');
+            
+            // Handle poetry/verse lines (lines starting with spaces or tabs and ending with line breaks)
+            html = html.replace(/^[ \t]*(.*)\n(?=[ \t]*\S)/gm, '<span class="verse-line">$1</span><br>');
+            
+            // Handle quoted content between " or * characters
+            html = html.replace(/„([^"]+)"/g, '<span class="quoted-text">„$1"</span>');
+            html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            
+            // Replace paragraph breaks more robustly
+            // First, split the text by empty lines
+            const paragraphs = html.split(/\n\s*\n/);
+            
+            // Then wrap each paragraph in <p> tags if not already a block element
+            html = paragraphs.map(p => {
+                p = p.trim();
+                if (p.startsWith('<h1') || p.startsWith('<h2') || p.startsWith('<div') || 
+                    p.startsWith('<hr') || p.startsWith('<p') || p.startsWith('<blockquote')) {
+                    return p;
+                }
+                return `<p class="book-paragraph">${p}</p>`;
+            }).join('\n\n');
+            
+            // Replace images - fix path issues by ensuring they point to the right directory
+            html = html.replace(/!\[(.*?)\]\(\/images\/(.*?)\)/g, '<img src="images/$2" alt="$1" class="book-image">'); 
+            html = html.replace(/!\[(.*?)\]\(images\/(.*?)\)/g, '<img src="images/$2" alt="$1" class="book-image">'); 
+            html = html.replace(/!\[(.*?)\]\(((?!\/|http|images).*?)\)/g, '<img src="$1" alt="$1" class="book-image">'); 
+            html = html.replace(/!\[(.*?)\]\((http.*?)\)/g, '<img src="$2" alt="$1" class="book-image">');
+            
+            // Make characters, places, and items look like links by adding a-tags
+            html = html.replace(/\[CHAR:([^\]]+)\]/g, '<a href="#" class="character">$1</a>');
+            html = html.replace(/\[PLACE:([^\]]+)\]/g, '<a href="#" class="place">$1</a>');
+            html = html.replace(/\[ITEM:([^\]]+)\]/g, '<a href="#" class="item">$1</a>');
+            
+            chapterContent.innerHTML = html;
+            
+            // Add event listeners to character, place, and item links
+            setupEntityLinks();
+        }
+
+        // Add interactive behavior to entity links
+        function setupEntityLinks() {
+            const entities = chapterContent.querySelectorAll('.character, .place, .item');
+            
+            entities.forEach(entity => {
+                entity.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // For now, just log the entity that was clicked
+                    // In a real app, this could show a modal with more info
+                    console.log(`Clicked on ${entity.className}: ${entity.textContent}`);
+                });
+            });
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Download PDF button
+            downloadPdfBtn.addEventListener('click', () => {
+                generatePDF();
+            });
+            
+            // Start reading button
+            startReadingBtn.addEventListener('click', startReading);
+        
+            // Menu toggle (nur für Mobilgeräte)
+            menuToggle.addEventListener('click', () => {
+                toggleSidebar();
+            });
+            
+            // Navigation buttons
+            prevButton.addEventListener('click', () => {
+                if (currentChapterIndex > 0) {
+                    loadChapter(currentChapterIndex - 1);
+                }
+            });
+
+            nextButton.addEventListener('click', () => {
+                if (currentChapterIndex < chapters.length - 1) {
+                    loadChapter(currentChapterIndex + 1);
+                }
+            });
+
+            // Re-enable reading progress tracking
+            contentArea.addEventListener('scroll', updateReadingProgress);
+
+            // Audio controls
+            toggleBtn.addEventListener('click', () => {
+                if (bgMusic.paused) {
+                    bgMusic.play();
+                    playIcon.className = 'fas fa-pause';
+                } else {
+                    bgMusic.pause();
+                    playIcon.className = 'fas fa-play';
+                }
+            });
+
+            // Add event listener for music ended to play next track
+            bgMusic.addEventListener('ended', () => {
+                playNextTrack();
+            });
+
+            volumeRange.addEventListener('input', () => {
+                bgMusic.volume = volumeRange.value;
+                updateVolumeIcon();
+            });
+            
+            // Handle window resize - anpassen für Mobilansicht
+            window.addEventListener('resize', () => {
+                // Update progress when window resizes
+                updateReadingProgress();
+            });
+
+            // Handle keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    if (currentChapterIndex > 0) {
+                        loadChapter(currentChapterIndex - 1);
+                    }
+                } else if (e.key === 'ArrowRight') {
+                    if (currentChapterIndex < chapters.length - 1) {
+                        loadChapter(currentChapterIndex + 1);
+                    }
+                }
+            });
+        }
+
+        // Update volume icon based on current volume
+        function updateVolumeIcon() {
+            const volume = bgMusic.volume;
+            if (volume === 0) {
+                volumeIcon.className = 'fas fa-volume-mute';
+            } else if (volume < 0.5) {
+                volumeIcon.className = 'fas fa-volume-down';
+            } else {
+                volumeIcon.className = 'fas fa-volume-up';
+            }
+        }
+
+        // Play the next track in the chapter's music collection
+        function playNextTrack() {
+            const chapterId = chapters[currentChapterIndex].id;
+            const musicTracks = chapterMusic[chapterId];
+            
+            if (musicTracks && musicTracks.length > 0) {
+                currentMusicIndex = (currentMusicIndex + 1) % musicTracks.length;
+                bgMusic.src = musicTracks[currentMusicIndex];
+                bgMusic.play();
+            }
+        }
+
+        // Show home page with book cover
+        function showHomePage() {
+            homePage.style.display = 'flex';
+            bookContainer.classList.remove('sidebar-open');
+        }
+
+        // Start reading from the first chapter
+        function startReading() {
+            homePage.style.display = 'none';
+            loadChapter(0);
+            // Start with sidebar open
+            toggleSidebar(true);
+        }
+
+        // Generate and download the book as PDF (text-only version)
+        async function generatePDF() {
+            // Show a loading indicator
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.className = 'pdf-loading-overlay';
+            loadingOverlay.innerHTML = '<div class="pdf-loading-spinner"></div><p>Generiere PDF...</p>';
+            document.body.appendChild(loadingOverlay);
+            
+            try {
+                // Initialize jsPDF
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                // Document margins
+                const margin = 20;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const textWidth = pageWidth - (margin * 2);
+                
+                // Font settings
+                doc.setFont('times', 'normal');
+                
+                // Title page
+                doc.setFontSize(28);
+                doc.text('Schrei der Helden', pageWidth / 2, 60, { align: 'center' });
+                
+                // Add new page for table of contents
+                doc.addPage();
+                doc.setFontSize(20);
+                doc.text('Inhaltsverzeichnis', pageWidth / 2, 30, { align: 'center' });
+                
+                // Add chapter list
+                doc.setFontSize(12);
+                let yPos = 50;
+                
+                chapters.forEach((chapter, index) => {
+                    // Add chapter title to TOC
+                    doc.text(chapter.title, margin, yPos);
+                    yPos += 10;
+                    
+                    // Start a new page if we're near the bottom
+                    if (yPos > pageHeight - margin) {
+                        doc.addPage();
+                        yPos = margin + 10;
+                    }
+                });
+                
+                // Process each chapter
+                for (let i = 0; i < chapters.length; i++) {
+                    const chapter = chapters[i];
+                    
+                    // Add a new page for each chapter
+                    doc.addPage();
+                    
+                    // Chapter title
+                    doc.setFontSize(20);
+                    doc.text(chapter.title, pageWidth / 2, 30, { align: 'center' });
+                    
+                    try {
+                        // Fetch chapter content
+                        const response = await fetch(`chapters/${chapter.filename}`);
+                        if (!response.ok) {
+                            throw new Error(`Failed to load chapter: ${chapter.filename}`);
+                        }
+                        
+                        const markdown = await response.text();
+                        
+                        // Process text
+                        doc.setFontSize(12);
+                        yPos = 50; // Reset Y position for content
+                        
+                        // Simple markdown to text conversion - strip tags
+                        let plainText = markdown
+                            .replace(/\[CHAR:([^\]]+)\]/g, '$1')
+                            .replace(/\[PLACE:([^\]]+)\]/g, '$1')
+                            .replace(/\[ITEM:([^\]]+)\]/g, '$1')
+                            .replace(/^#+ (.+)$/gm, '$1') // Remove heading markers but keep text
+                            .replace(/^---$/gm, '* * *'); // Replace horizontal rules
+                        
+                        // Split into paragraphs
+                        const paragraphs = plainText.split(/\n\s*\n/);
+                        
+                        for (const paragraph of paragraphs) {
+                            if (paragraph.trim() === '') continue;
+                            
+                            // Split paragraph into lines that fit on the page
+                            const lines = doc.splitTextToSize(paragraph.trim(), textWidth);
+                            
+                            // Check if we need a new page
+                            if (yPos + (lines.length * 6) > pageHeight - margin) {
+                                doc.addPage();
+                                yPos = margin + 10;
+                            }
+                            
+                            // Add the text
+                            doc.text(lines, margin, yPos);
+                            
+                            // Move Y position for next paragraph, add space between paragraphs
+                            yPos += (lines.length * 6) + 6;
+                        }
+                        
+                    } catch (error) {
+                        console.error(`Error loading chapter ${chapter.filename}:`, error);
+                        doc.text(`Error loading chapter: ${chapter.title}`, margin, yPos);
+                    }
+                }
+                
+                // Save the PDF
+                doc.save('Schrei_der_Helden.pdf');
+                
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Fehler beim Erstellen des PDFs: ' + error.message);
+            } finally {
+                // Remove loading overlay
+                document.body.removeChild(loadingOverlay);
+            }
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html> 

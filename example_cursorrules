@@ -1,0 +1,6 @@
+# This file contains rules and guidelines for Cursor AI when editing the book chapters.
+# Examples:
+# - Maintain a consistent third-person perspective.
+# - Ensure character motivations align with the storyboard.md descriptions.
+# - Use the specified tagging format: [CHAR:Name], [PLACE:Location], [ITEM:Object], [SCENE-ID: X-Y].
+# - Refer to storyboard.md for plot points and character arcs. 

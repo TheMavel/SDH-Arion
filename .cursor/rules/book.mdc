@@ -1,0 +1,25 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+### Chapter-based, Consistent Story Development
+
+# Chronological Chapter Structure:
+- The books are written in chapters arranged in chronological order.
+- Each chapter follows its predecessor in temporal sequence.
+
+# Review and Analysis:
+- Before beginning a new chapter, all previous chapters are read thoroughly.
+- The scenes within are analyzed in terms of their emotional impact and significance.
+
+# Stylistic Consistency:
+- When writing new scenes, we adhere to the writing style of the existing chapters.
+- This ensures that the entire narrative remains stylistically uniform and coherent.
+
+# Storyboard Integration:
+- Before writing, refer to the storyboard [storyboard.md](mdc:storyboard.md) to determine if ideas for further developing the story already exist idea is present, a new chapter progression is suggested and proposed.
+
+# Additional Guidelines:
+- Use the specified tagging format: [CHAR:Name], [PLACE:Location], [ITEM:Object], [SCENE-ID: X-Y].
+- Refer to storyboard.md for plot points and character arcs.
