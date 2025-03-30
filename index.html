@@ -92,11 +92,11 @@
 
         // Chapter data - in a real app, this would be loaded dynamically
         const chapters = [
-            { id: 'prolog', filename: 'Prolog.md', title: 'Prolog', coverImage: 'images/Prolog_tequila scene_1.png' },
-            { id: 'kapitel1', filename: 'Kapitel_1_Die_Treppe.md', title: 'Kapitel 1: Die Treppe', coverImage: 'images/Prolog_wedding scene_1.png' },
-            { id: 'kapitel2teil1', filename: 'Kapitel_2_Das_Erwachen_Teil_1.md', title: 'Kapitel 2: Das Erwachen Teil 1 (Andrew)', coverImage: 'images/andrew_profil_image1.png' },
-            { id: 'kapitel2teil2', filename: 'Kapitel_2_Das_Erwachen_Teil_2.md', title: 'Kapitel 2: Das Erwachen Teil 2 (Jake)', coverImage: 'images/jake_profil_image1.png' },
-            { id: 'kapitel2teil3', filename: 'Kapitel_2_Das_Erwachen_Teil_3.md', title: 'Kapitel 2: Das Erwachen Teil 3 (Brian)', coverImage: 'images/brian_profil_image1.png' },
+            { id: 'prolog', filename: 'Prolog.md', title: 'Prolog', coverImage: 'images/Prolog_Cover.png' },
+            { id: 'kapitel1', filename: 'Kapitel_1_Die_Treppe.md', title: 'Kapitel 1: Die Treppe', coverImage: 'images/Kapitel 1_Cover.png' },
+            { id: 'kapitel2teil1', filename: 'Kapitel_2_Das_Erwachen_Teil_1.md', title: 'Kapitel 2: Das Erwachen Teil 1 (Andrew)', coverImage: 'images/Kapitel 2_Cover1.png' },
+            { id: 'kapitel2teil2', filename: 'Kapitel_2_Das_Erwachen_Teil_2.md', title: 'Kapitel 2: Das Erwachen Teil 2 (Jake)', coverImage: 'images/Kapitel 2_Cover2.png' },
+            { id: 'kapitel2teil3', filename: 'Kapitel_2_Das_Erwachen_Teil_3.md', title: 'Kapitel 2: Das Erwachen Teil 3 (Brian)', coverImage: 'images/Kapitel 2_Cover3.png' },
             { id: 'kapitel3teil1', filename: 'Kapitel_3_Die_Neue_Welt_Teil_1.md', title: 'Kapitel 3: Die Neue Welt Teil 1 (Andrew)', coverImage: '' },
             { id: 'kapitel3teil2', filename: 'Kapitel_3_Die_Neue_Welt_Teil_2.md', title: 'Kapitel 3: Die Neue Welt Teil 2 (Jake)', coverImage: '' },
             { id: 'kapitel3teil3', filename: 'Kapitel_3_Die_Neue_Welt_Teil_3.md', title: 'Kapitel 3: Die Neue Welt Teil 3 (Brian)', coverImage: '' },
@@ -110,8 +110,8 @@
             'prolog': ['music/Prolog_Tropical Vibes.mp3', 'music/Prolog_Tribal Echo.mp3'],
             'kapitel1': ['music/Kapitel 1_Desert Echoes.mp3', 'music/Kapitel 1_Elysium.mp3'],
             'kapitel2teil1': ['music/Kapitel 2_awakening andrew.mp3', 'music/Kapitel 2_awakening andrew 2.mp3'],
-            'kapitel2teil2': [],
-            'kapitel2teil3': [],
+            'kapitel2teil2': ['music/Kapitel 2_Elysium 1.mp3'],
+            'kapitel2teil3': ['music/Kapitel 2_Serenity.mp3'],
             'kapitel3teil1': [],
             'kapitel3teil2': [],
             'kapitel3teil3': [],
@@ -308,6 +308,91 @@
             html = html.replace(/\[CHAR:([^\]]+)\]/g, '<a href="#" class="character">$1</a>');
             html = html.replace(/\[PLACE:([^\]]+)\]/g, '<a href="#" class="place">$1</a>');
             html = html.replace(/\[ITEM:([^\]]+)\]/g, '<a href="#" class="item">$1</a>');
+            
+            // Insert additional images for the Prolog at specific scenes
+            if (html.includes("Prolog") && !html.includes("Das Erwachen")) {
+                // Skip adding Prolog_picture.png at beginning since it's already added as chapter cover image
+                
+                // Image 1: Add tequila scene after first paragraph
+                const tequilaSceneMarker = "hingen wie vergessene Hemden an einer Wäscheleine.";
+                if (html.includes(tequilaSceneMarker)) {
+                    const tequilaImage = '<div class="chapter-image-container"><img src="images/Prolog_tequila_scene_1.png" alt="Tequila Scene" class="book-image"></div>';
+                    html = html.replace(tequilaSceneMarker, tequilaSceneMarker + tequilaImage);
+                }
+                
+                // Image 2: Add before the retreat scene section
+                const retreatSceneMarker = "Der Schamane – oder wie";
+                if (html.includes(retreatSceneMarker)) {
+                    const retreatImage = '<div class="chapter-image-container"><img src="images/Prolog_retreat_scene_1.png" alt="Retreat Scene" class="book-image"></div>';
+                    html = html.replace(retreatSceneMarker, retreatImage + retreatSceneMarker);
+                }
+                
+                // Image 3: Add vision scene after specific phrase
+                const visionSceneMarker = "die sie verstanden und doch nicht kannten.";
+                if (html.includes(visionSceneMarker)) {
+                    const visionImage = '<div class="chapter-image-container"><img src="images/Prolog_vision_scene_1.png" alt="Vision Scene" class="book-image"></div>';
+                    html = html.replace(visionSceneMarker, visionSceneMarker + visionImage);
+                }
+                
+                // Image 4: Wedding scene - before "Ruhe bitte, Ruhe! Ein Toast!"
+                const weddingToastMarker = '„Ruhe bitte, Ruhe! Ein Toast!"';
+                if (html.includes(weddingToastMarker)) {
+                    const weddingImage = '<div class="chapter-image-container"><img src="images/Prolog_wedding_scene_1.png" alt="Wedding Scene" class="book-image"></div>';
+                    html = html.replace(weddingToastMarker, weddingImage + weddingToastMarker);
+                }
+                
+                // Image 5: Bar scene - before "Kurzfristig. Wie in: jetzt sofort."
+                const barSceneMarker = "Kurzfristig. Wie in: jetzt sofort.";
+                if (html.includes(barSceneMarker)) {
+                    const barImage = '<div class="chapter-image-container"><img src="images/Prolog_bar_scene_1.png" alt="Bar Scene" class="book-image"></div>';
+                    html = html.replace(barSceneMarker, barImage + barSceneMarker);
+                }
+            }
+            
+            // Insert additional images for Kapitel 1 at specific scenes
+            if (html.includes("Die Treppe") && !html.includes("Das Erwachen")) {
+                // Helicopter scene - after Jake's déjà-vu line
+                const helicopterSceneMarker = 'Der Pilot, ein wettergebräunter';
+                if (html.includes(helicopterSceneMarker)) {
+                    const helicopterImage = '<div class="chapter-image-container"><img src="images/Kapitel 1_Helicopter_scene.png" alt="Helicopter Scene" class="book-image"></div>';
+                    html = html.replace(helicopterSceneMarker, helicopterImage + helicopterSceneMarker);
+                }
+                
+                // Image 1: Arrival scene after helicopter departure
+                const arrivalSceneMarker = 'Seine Abwesenheit hinterließ eine Stille, die so vollkommen war';
+                if (html.includes(arrivalSceneMarker)) {
+                    const arrivalImage = '<div class="chapter-image-container"><img src="images/Kapitel 1_arrival_scene.png" alt="Arrival Scene" class="book-image"></div>';
+                    html = html.replace(arrivalSceneMarker, arrivalImage + arrivalSceneMarker);
+                }
+                
+                // Image 2: Water scene after description of bridges and cliffs
+                const waterSceneMarker = 'Aber die Sonne. ';
+                if (html.includes(waterSceneMarker)) {
+                    const waterImage = '<div class="chapter-image-container"><img src="images/Kapitel 1_water_scene.png" alt="Water Scene" class="book-image"></div>';
+                    html = html.replace(waterSceneMarker, waterImage + waterSceneMarker);
+                }
+                
+                // Image 3: Entrance scene where Jake touches the symbol
+                const entranceSceneMarker = '<a href="#" class="character">Jake</a> streckte die Hand aus und berührte eines der Symbole';
+                if (html.includes(entranceSceneMarker)) {
+                    const entranceImage = '<div class="chapter-image-container"><img src="images/Kapitel 1_entrance_scene.png" alt="Entrance Scene" class="book-image"></div>';
+                    html = html.replace(entranceSceneMarker, entranceImage + entranceSceneMarker);
+                }
+                
+                // Image 4: Door scene at the white gate
+                const doorSceneMarker = 'Es ragte vor ihnen auf wie eine Manifestation reinen Lichts';
+                if (html.includes(doorSceneMarker)) {
+                    const doorImage = '<div class="chapter-image-container"><img src="images/Kapitel 1_door_scene.png" alt="Door Scene" class="book-image"></div>';
+                    html = html.replace(doorSceneMarker, doorImage + doorSceneMarker);
+                }
+                
+                // Image 5: Fall scene at the end of the chapter
+                const fallSceneMarker = 'Oder als hätte eine andere Welt sie gerufen.';
+                if (html.includes(fallSceneMarker)) {
+                    const fallImage = '<div class="chapter-image-container"><img src="images/Kapitel 1_fall_scene_1.png" alt="Fall Scene" class="book-image"></div>';
+                    html = html.replace(fallSceneMarker, fallSceneMarker + fallImage);
+                }
+            }
             
             chapterContent.innerHTML = html;
             

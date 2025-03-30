@@ -58,6 +58,8 @@ Die Hochzeit war eine Angelegenheit von geschmackvoller Effizienz – genau wie 
 
 Bei der Empfangsfeier in einer der unzähligen blitzenden Hotelbars schaffte [CHAR:Jake] es irgendwie, trotz seines spektakulären Katers, mit einem Sektglas in der Hand aufzustehen. Das Glas schwankte bedrohlich, sein Lächeln war aufrichtig, wenn auch leicht schmerzverzerrt durch die Nachwirkungen der letzten Tage.
 
+
+
 „Ruhe bitte, Ruhe! Ein Toast!" Die Gespräche verstummten. „Auf [CHAR:Brian] und [CHAR:Julie]! Wer hätte gedacht, dass ausgerechnet du, Herr 'Die-Wahrscheinlichkeit-einer-erfolgreichen-Ehe-steht-statistisch-bei-48-Prozent' Karam, als Erster von uns den Sprung wagt?" Ein Lachen ging durch den Raum. „[CHAR:Julie], du hast dir einen guten geschnappt. Er mag manchmal etwas... präzise sein, aber er hat das größte Herz, das ich kenne. Und ich war Zeuge, als er einmal versucht hat, den Alkoholgehalt eines Margarita-Pitchers zu berechnen, also weiß ich, dass er auch Spaß haben kann!"
 
 Er hob sein Glas höher. „Und weil wir gerade bei großen Worten sind... Keine Ahnung warum, aber seit unserem kleinen 'spirituellen Ausflug' in Mexiko geht mir dieser Spruch nicht mehr aus dem Kopf. Als würde er irgendwie... passen." Er räusperte sich theatralisch und zitierte mit einer plötzlich ernsteren Stimme:
